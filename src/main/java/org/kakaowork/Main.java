@@ -1,16 +1,12 @@
 package org.kakaowork;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Indexes;
-import org.bson.Document;
 import org.kakaowork.util.CustomLogger;
-import org.kakaowork.util.DBConnection;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
-
-    public static final String AWS_MONGODB_IP = "34.198.137.161";
-    public static final int AWS_MONGO_PORT = 27017;
+    public static Map<String, Integer> schoolNmMap;
     public static void main(String[] args) throws Exception{
 
         //인스턴스 생성
@@ -18,19 +14,13 @@ public class Main {
         SchoolService sc = new SchoolService();
         CommentsAnalysis ca = new CommentsAnalysis();
 
-        //로컬 DB Connection
-        MongoClient mongoClient = DBConnection.getConnection();
-        MongoCollection<Document> coll =  mongoClient.getDatabase("kakaobank").getCollection("school");
-
-        //MongoDB 컬렉션 초기화
-        cl.info("[DB DML] Collection drop");
-        coll.drop();
-        coll.createIndex(Indexes.ascending("schlNm"));
-        //학교정보 공공 REST API 호출 + MongoDB에 저장
-        sc.getSchoolInfo("SCHOOL", cl);
-        sc.getSchoolInfo("UNIV", cl);
+        //학교 공공데이터 저장 Map
+        schoolNmMap = new HashMap<String, Integer>();
+        sc.getSchoolInfo("SCHOOL", schoolNmMap, cl);
+        sc.getSchoolInfo("UNIV", schoolNmMap, cl);
+        cl.info("[schoolNmMap SIZE] = " + schoolNmMap.size());
 
         //Comment 파일 Read 및 분석
-        ca.doAnalyisis();
+        ca.doAnalyisis(schoolNmMap);
     }
 }

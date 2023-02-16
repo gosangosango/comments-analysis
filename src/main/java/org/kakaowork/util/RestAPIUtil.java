@@ -11,7 +11,7 @@ public class RestAPIUtil {
 
     public String callAPI(URL url,CustomLogger cl){
 
-        cl.info("[REST API CALL] START");
+
         cl.info("[REST API CALL] URL = " + url.toString());
 
         HttpURLConnection conn = null;
@@ -42,7 +42,6 @@ public class RestAPIUtil {
         }
 
         cl.info("[REST API CALL] RESPONSE CODE = " + responseCode);
-        cl.info("[REST API CALL] END");
         return sbInput.toString();
     }
 

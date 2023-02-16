@@ -2,7 +2,6 @@ package org.kakaowork;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.kakaowork.util.CustomLogger;
 import org.kakaowork.util.DBConnection;
@@ -17,7 +16,7 @@ public class CommentsAnalysis {
     private static final String INPUT_FILE_PATH = "C:\\Kakaobank-comment-analysis\\comments.csv";
     private static final String RESULT_FILE_PATH = "C:\\Kakaobank-comment-analysis\\result.txt";
     public static Map<String, Integer> schoolCntMap;
-    public void doAnalyisis() {
+    public void doAnalyisis(Map<String, Integer> map) {
         CustomLogger cl = CustomLogger.getLogger();
         schoolCntMap = new HashMap<String, Integer>();
 
@@ -43,13 +42,12 @@ public class CommentsAnalysis {
                     //댓글 내 학교명 패턴검색 (중복제거)
                     Set<String> findNames = findSchoolPattern(eachComment);
 
-                    //DB내 유효 학교 검색
-                    findSchoolFromDB(findNames, coll);
+                    //유효한 학교정보 Map에서 검색
+                    findSchoolFromMap(findNames, map);
                     eachComment = "";
                 } else {
                     eachComment += " " + line;
                 }
-
             }
         }catch (IOException e) {
             e.printStackTrace();
@@ -119,11 +117,11 @@ public class CommentsAnalysis {
         return findResult;
     }
 
-    public void findSchoolFromDB(Set<String> findNames, MongoCollection<Document> coll){
+    public void findSchoolFromMap(Set<String> findNames, Map<String, Integer> map){
         CustomLogger cl = CustomLogger.getLogger();
         Set<String> matchSchoolName = new HashSet<String>();
         for(String findName : findNames){
-            if(coll.countDocuments(Filters.in("schlNm", findName)) > 0){
+            if(map.get(findName) != null && map.get(findName) == 1){
                 matchSchoolName.add(findName);
             }
         }

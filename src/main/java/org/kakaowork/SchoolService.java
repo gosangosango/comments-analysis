@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SchoolService {
 
@@ -20,7 +21,7 @@ public class SchoolService {
     RestAPIUtil restApiUtil;
     MongoClient mongoClient;
 
-    public void getSchoolInfo (String kind, CustomLogger cl) throws UnsupportedEncodingException {
+    public void getSchoolInfo (String kind, Map<String, Integer> schoolNmMap, CustomLogger cl) throws UnsupportedEncodingException {
 
         String serviceKeyDecoded = URLDecoder.decode(SERVICE_KEY, "UTF-8");
 
@@ -43,6 +44,7 @@ public class SchoolService {
             pageNo++;
             String response = null;
             try {
+                cl.info("[REST API CALL] START");
                 response = restApiUtil.callAPI(restApiUtil.SetUrl(urlStr, serviceKeyDecoded, pageNo, numOfRows, "json"), cl);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -55,21 +57,18 @@ public class SchoolService {
             curCnt =  (pageNo - 1) * numOfRows;
             JsonArray items = objData.get("response").getAsJsonObject().get("body").getAsJsonObject().get("items").getAsJsonArray();
 
+            cl.info("[REST API CALL] CurrentCount / TotalCount = " + pageNo * 1000 + " / " + totalCnt);
+            cl.info("[REST API CALL] END");
+
             //배열 순회 및 데이터 처리
             JsonObject tmp;
             String tmpSchlNm = "";
-            List<Document> documentList = new ArrayList<Document>();
-            StringBuilder sb= new StringBuilder();
-            int seq = curCnt;
+
             for(JsonElement item: items){
-                seq++;
                 tmp = (JsonObject) item.getAsJsonObject();
                 tmpSchlNm = tmp.get("schlNm").getAsString();
-                documentList.add(new Document("schlNm", tmpSchlNm).append("id", seq));
+                schoolNmMap.put(tmpSchlNm, 1);
             }
-            MongoCollection<Document> coll =  mongoClient.getDatabase("kakaobank").getCollection("school");
-            InsertManyOptions options = new InsertManyOptions();
-            coll.insertMany(documentList, options.ordered(options.isOrdered()));
         }
     }
 }
